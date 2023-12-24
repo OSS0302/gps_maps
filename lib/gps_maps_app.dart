@@ -33,10 +33,7 @@ class GpsMapsAppState extends State<GpsMapsApp> {
     _initialCameraPostion = CameraPosition(
         target: LatLng(position.latitude, position.longitude), zoom: 15);
     setState(() { });
-    // 출려학하기
-    // print(position.longitude);
-    // print(position.latitude);
-    print(position.toString());
+
   }
 
   @override
