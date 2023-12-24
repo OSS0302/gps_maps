@@ -14,12 +14,10 @@ class GpsMapsAppState extends State<GpsMapsApp> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-  // 어떤 위치를  위도 경도 를 통해서  나타낸다.
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
   CameraPosition? _initialCameraPostion;
+  Set<Polyline> _polylines = {};
+  int _polylineIdCounter = 0;
+  LatLng? _previousPosition;
 
   @override
   void initState() {
@@ -31,13 +29,31 @@ class GpsMapsAppState extends State<GpsMapsApp> {
     final position = await _determinePosition();
 
     _initialCameraPostion = CameraPosition(
-        target: LatLng(position.latitude, position.longitude), zoom: 15);
+      target: LatLng(position.latitude, position.longitude),
+      zoom: 15,
+    );
     setState(() {});
 
     const locationSettings = LocationSettings();
     Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {
-          _moveTheCamera(position);
+      _polylineIdCounter++;
+      final polylineId = PolylineId('$_polylineIdCounter');
+      Polyline polyline = Polyline(
+        polylineId: polylineId,
+        color: Colors.blueAccent,
+        width: 3,
+        points: [
+          _previousPosition ?? _initialCameraPostion!.target,
+          LatLng(position.latitude, position.longitude),
+        ],
+      );
+      setState(() {
+      _polylines.add(polyline);
+      _previousPosition = LatLng(position.latitude, position.longitude);
+      });
+
+      _moveTheCamera(position);
     });
   }
 
@@ -55,8 +71,8 @@ class GpsMapsAppState extends State<GpsMapsApp> {
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
               },
+              polylines: _polylines,
             ),
-      // _goToTheLake 함수 호출
     );
   }
 
