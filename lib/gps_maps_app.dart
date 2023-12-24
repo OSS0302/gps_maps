@@ -19,36 +19,36 @@ class GpsMapsAppState extends State<GpsMapsApp> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+  CameraPosition? _initialCameraPostion;
 
   @override
   void initState() {
     super.initState();
-    _determinePosition();
+    init();
   }
 
   Future<void> init() async {
     final position = await _determinePosition();
+
+    _initialCameraPostion = CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 15);
+    setState(() { });
     // 출려학하기
     // print(position.longitude);
     // print(position.latitude);
     print(position.toString());
   }
 
-  // 다른 위치 정보 위도 경도
-  static const CameraPosition _kLake = CameraPosition(
-      bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
-      tilt: 59.440717697143555,
-      zoom: 19.151926040649414);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       //구글맵
-      body: GoogleMap(
+      body: _initialCameraPostion == null
+          ? const Center(child: CircularProgressIndicator())
+          :GoogleMap(
         //형태 하이브리드
         mapType: MapType.hybrid,
-        initialCameraPosition: _kGooglePlex,
+        initialCameraPosition: _initialCameraPostion!,
         //구글 본사 위치 정보 나온다. 구글맵을 컨트롤하는 컨트롤러 를 통해서 맵을 조작한다.
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
@@ -75,7 +75,7 @@ class GpsMapsAppState extends State<GpsMapsApp> {
       zoom: 16,
     );
 
-     controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
   // 현재 위치 정보를 접근 할때  꼭해야하는 코드
