@@ -32,8 +32,13 @@ class GpsMapsAppState extends State<GpsMapsApp> {
 
     _initialCameraPostion = CameraPosition(
         target: LatLng(position.latitude, position.longitude), zoom: 15);
-    setState(() { });
+    setState(() {});
 
+    const locationSettings = LocationSettings();
+    Geolocator.getPositionStream(locationSettings: locationSettings)
+        .listen((Position position) {
+          _moveTheCamera(position);
+    });
   }
 
   @override
@@ -42,28 +47,22 @@ class GpsMapsAppState extends State<GpsMapsApp> {
       //구글맵
       body: _initialCameraPostion == null
           ? const Center(child: CircularProgressIndicator())
-          :GoogleMap(
-        //형태 하이브리드
-        mapType: MapType.hybrid,
-        initialCameraPosition: _initialCameraPostion!,
-        //구글 본사 위치 정보 나온다. 구글맵을 컨트롤하는 컨트롤러 를 통해서 맵을 조작한다.
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-      ),
+          : GoogleMap(
+              //형태 하이브리드
+              mapType: MapType.hybrid,
+              initialCameraPosition: _initialCameraPostion!,
+              //구글 본사 위치 정보 나온다. 구글맵을 컨트롤하는 컨트롤러 를 통해서 맵을 조작한다.
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
       // _goToTheLake 함수 호출
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _goToTheLake,
-        label: const Text('To the lake!'),
-        icon: const Icon(Icons.directions_boat),
-      ),
     );
   }
 
-  // 화면 돌아가는 줌되는 애니메이션
-  Future<void> _goToTheLake() async {
+  // 화면 움직이는  줌 되는  로직
+  Future<void> _moveTheCamera(Position position) async {
     final GoogleMapController controller = await _controller.future;
-    final position = await Geolocator.getCurrentPosition();
     final cameraPosition = CameraPosition(
       target: LatLng(
         position.latitude,
