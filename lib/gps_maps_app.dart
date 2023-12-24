@@ -12,7 +12,8 @@ class GpsMapsApp extends StatefulWidget {
 
 class GpsMapsAppState extends State<GpsMapsApp> {
   final Completer<GoogleMapController> _controller =
-  Completer<GoogleMapController>();
+      Completer<GoogleMapController>();
+
   // 어떤 위치를  위도 경도 를 통해서  나타낸다.
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
@@ -25,14 +26,14 @@ class GpsMapsAppState extends State<GpsMapsApp> {
     _determinePosition();
   }
 
-  Future<void> init() async{
-  final position = await _determinePosition();
-  // 출려학하기
-  // print(position.longitude);
-  // print(position.latitude);
-  print(position.toString());
-
+  Future<void> init() async {
+    final position = await _determinePosition();
+    // 출려학하기
+    // print(position.longitude);
+    // print(position.latitude);
+    print(position.toString());
   }
+
   // 다른 위치 정보 위도 경도
   static const CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
@@ -61,12 +62,22 @@ class GpsMapsAppState extends State<GpsMapsApp> {
       ),
     );
   }
+
   // 화면 돌아가는 줌되는 애니메이션
   Future<void> _goToTheLake() async {
     final GoogleMapController controller = await _controller.future;
-    await controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+    final position = await Geolocator.getCurrentPosition();
+    final cameraPosition = CameraPosition(
+      target: LatLng(
+        position.latitude,
+        position.longitude,
+      ),
+      zoom: 16,
+    );
 
+     controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
+
   // 현재 위치 정보를 접근 할때  꼭해야하는 코드
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
