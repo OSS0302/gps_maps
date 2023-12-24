@@ -1,7 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class GpsMapsApp extends StatefulWidget {
   const GpsMapsApp({super.key});
@@ -18,6 +18,21 @@ class GpsMapsAppState extends State<GpsMapsApp> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _determinePosition();
+  }
+
+  Future<void> init() async{
+  final position = await _determinePosition();
+  // 출려학하기
+  // print(position.longitude);
+  // print(position.latitude);
+  print(position.toString());
+
+  }
   // 다른 위치 정보 위도 경도
   static const CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
@@ -50,5 +65,44 @@ class GpsMapsAppState extends State<GpsMapsApp> {
   Future<void> _goToTheLake() async {
     final GoogleMapController controller = await _controller.future;
     await controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+
+  }
+  // 현재 위치 정보를 접근 할때  꼭해야하는 코드
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    // 핸드폰에 위치정보가 켜져있는지 확인 하는 코드 없으면 오류난다.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+    // checkPermission 통해서 위치정보 동의를 얻을때 동의 구하면 오류
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
   }
 }
